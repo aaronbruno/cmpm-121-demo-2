@@ -1,3 +1,4 @@
+// Citation: https://shoddy-paint.glitch.me/paint1.html
 import "./style.css";
 
 const app: HTMLDivElement = document.querySelector("#app")!;
@@ -18,51 +19,73 @@ app.append(canvas);
 
 // Get canvas context
 const canvasContext = canvas.getContext("2d")!;
-canvasContext!.fillStyle = "white";
-canvasContext?.fillRect(0, 0, 256, 256);
+canvasContext.fillStyle = "white";
+canvasContext.fillRect(0, 0, 256, 256);
 
-// Citation: https://shoddy-paint.glitch.me/paint1.html
-// const drawingChanged = new CustomEvent("drawing-changed");
+const drawingChanged = new CustomEvent("drawing-changed");
 
-const lines: any[] = [];
-const redoLines: any[] = [];
-
-let currentLine: any = [];
+let lines: { x: number; y: number }[][] = [];
+let redoLines: { x: number; y: number }[][] = [];
+let currentLine: { x: number; y: number }[] | null = [];
+type ClickHandler = () => void;
 
 const cursor = { active: false, x: 0, y: 0 };
 
-canvas.addEventListener("mousedown", (e) => {
-  cursor.active = true;
-  cursor.x = e.offsetX;
-  cursor.y = e.offsetY;
+// Add buttons
+app.append(document.createElement("br"));
+addCanvasButton(eraseCanvas, "clear");
+addCanvasButton(undoCanvas, "undo");
+addCanvasButton(redoCanvas, "redo");
 
-  currentLine = [];
-  lines.push(currentLine);
-  redoLines.splice(0, redoLines.length);
-  currentLine.push({ x: cursor.x, y: cursor.y });
+addCanvasEvents();
 
-  redraw();
-});
+// ---------- FUNCTIONS ----------
+function addCanvasButton(func: ClickHandler, buttonName: string) {
+  const button = document.createElement("button");
+  button.innerHTML = buttonName;
+  app.append(button);
 
-canvas.addEventListener("mousemove", (e) => {
-  if (cursor.active) {
+  button.addEventListener("click", () => {
+    func();
+  });
+}
+
+function addCanvasEvents() {
+  canvas.addEventListener("mousedown", (e) => {
+    cursor.active = true;
     cursor.x = e.offsetX;
     cursor.y = e.offsetY;
+    currentLine = [];
+    lines.push(currentLine);
+
     currentLine.push({ x: cursor.x, y: cursor.y });
 
+    canvas.dispatchEvent(drawingChanged);
+  });
+
+  canvas.addEventListener("mousemove", (e) => {
+    if (cursor.active) {
+      cursor.x = e.offsetX;
+      cursor.y = e.offsetY;
+      currentLine!.push({ x: cursor.x, y: cursor.y });
+      redoLines = [];
+
+      canvas.dispatchEvent(drawingChanged);
+    }
+  });
+
+  canvas.addEventListener("mouseup", () => {
+    cursor.active = false;
+    currentLine = null;
+  });
+
+  canvas.addEventListener("drawing-changed", () => {
     redraw();
-  }
-});
-
-canvas.addEventListener("mouseup", () => {
-  cursor.active = false;
-  currentLine = null;
-
-  redraw();
-});
+  });
+}
 
 function redraw() {
-  canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+  clearCanvas();
   for (const line of lines) {
     if (line.length > 1) {
       canvasContext.beginPath();
@@ -76,35 +99,30 @@ function redraw() {
   }
 }
 
-document.body.append(document.createElement("br"));
+function eraseCanvas() {
+  redoLines = lines;
+  lines = [];
+  clearCanvas();
+}
 
-const clearButton = document.createElement("button");
-clearButton.innerHTML = "clear";
-document.body.append(clearButton);
+function clearCanvas() {
+  canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+  canvasContext.fillStyle = "white";
+  canvasContext.fillRect(0, 0, 256, 256);
+}
 
-clearButton.addEventListener("click", () => {
-  lines.splice(0, lines.length);
-  redraw();
-});
-
-const undoButton = document.createElement("button");
-undoButton.innerHTML = "undo";
-document.body.append(undoButton);
-
-undoButton.addEventListener("click", () => {
-  if (lines.length > 0) {
-    redoLines.push(lines.pop());
-    redraw();
+function undoCanvas() {
+  if (lines.length != 0) {
+    redoLines.push(lines.pop()!);
+    canvas.dispatchEvent(drawingChanged);
   }
-});
+  return;
+}
 
-const redoButton = document.createElement("button");
-redoButton.innerHTML = "redo";
-document.body.append(redoButton);
-
-redoButton.addEventListener("click", () => {
-  if (redoLines.length > 0) {
-    lines.push(redoLines.pop());
-    redraw();
+function redoCanvas() {
+  if (lines.length != 0) {
+    lines.push(redoLines.pop()!);
+    canvas.dispatchEvent(drawingChanged);
   }
-});
+  return;
+}
