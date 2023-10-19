@@ -21,3 +21,36 @@ canvasContext!.fillStyle = "white";
 canvasContext?.fillRect(0, 0, 256, 256);
 
 app.append(canvas);
+
+const cursor = { active: false, x: 0, y: 0 };
+
+// const paths = [];
+
+canvas.addEventListener("mousedown", (e) => {
+  cursor.active = true;
+  cursor.x = e.offsetX;
+  cursor.y = e.offsetY;
+});
+
+canvas.addEventListener("mousemove", (e) => {
+  if (cursor.active) {
+    canvasContext?.beginPath();
+    canvasContext?.moveTo(cursor.x, cursor.y);
+    canvasContext?.lineTo(e.offsetX, e.offsetY);
+    canvasContext?.stroke();
+    cursor.x = e.offsetX;
+    cursor.y = e.offsetY;
+  }
+});
+
+canvas.addEventListener("mouseup", () => {
+  cursor.active = false;
+});
+
+const clearButton = document.createElement("button");
+clearButton.innerHTML = "clear";
+document.body.append(clearButton);
+
+clearButton.addEventListener("click", () => {
+  canvasContext?.clearRect(0, 0, canvas.width, canvas.height);
+});
