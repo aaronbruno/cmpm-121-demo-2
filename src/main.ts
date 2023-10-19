@@ -18,9 +18,9 @@ canvas.width = 256;
 app.append(canvas);
 
 // Get canvas context
-const canvasContext = canvas.getContext("2d")!;
-canvasContext.fillStyle = "white";
-canvasContext.fillRect(0, 0, 256, 256);
+const ctx = canvas.getContext("2d")!;
+ctx.fillStyle = "white";
+ctx.fillRect(0, 0, 256, 256);
 
 const drawingChanged = new CustomEvent("drawing-changed");
 
@@ -88,13 +88,13 @@ function redraw() {
   clearCanvas();
   for (const line of lines) {
     if (line.length > 1) {
-      canvasContext.beginPath();
+      ctx.beginPath();
       const { x, y } = line[0];
-      canvasContext.moveTo(x, y);
+      ctx.moveTo(x, y);
       for (const { x, y } of line) {
-        canvasContext.lineTo(x, y);
+        ctx.lineTo(x, y);
       }
-      canvasContext.stroke();
+      ctx.stroke();
     }
   }
 }
@@ -106,9 +106,9 @@ function eraseCanvas() {
 }
 
 function clearCanvas() {
-  canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-  canvasContext.fillStyle = "white";
-  canvasContext.fillRect(0, 0, 256, 256);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, 256, 256);
 }
 
 function undoCanvas() {
@@ -120,7 +120,7 @@ function undoCanvas() {
 }
 
 function redoCanvas() {
-  if (lines.length != 0) {
+  if (redoLines.length != 0) {
     lines.push(redoLines.pop()!);
     canvas.dispatchEvent(drawingChanged);
   }
