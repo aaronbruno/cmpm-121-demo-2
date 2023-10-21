@@ -2,6 +2,7 @@
 import "./style.css";
 
 import { Line } from "./classes.ts";
+import { CursorCommand } from "./classes.ts";
 
 const app: HTMLDivElement = document.querySelector("#app")!;
 
@@ -18,13 +19,12 @@ canvas.id = "canvas";
 canvas.height = 256;
 canvas.width = 256;
 app.append(canvas);
+canvas.style.cursor = "none";
 
 // Get canvas context
 const ctx = canvas.getContext("2d")!;
 ctx.fillStyle = "white";
 ctx.fillRect(0, 0, 256, 256);
-
-const drawingChanged = new CustomEvent("drawing-changed");
 
 let lines: Line[] = [];
 let redoLines: Line[] = [];
@@ -32,6 +32,10 @@ let currentLine: Line | null = new Line();
 type ClickHandler = () => void;
 
 const cursor = { active: false, x: 0, y: 0 };
+
+const drawingChanged = new CustomEvent("drawing-changed");
+const cursorChanged = new CustomEvent("cursor-changed");
+let cursorCommand: CursorCommand | null = null;
 
 // Add buttons
 app.append(document.createElement("br"));
@@ -87,6 +91,25 @@ function addCanvasEvents() {
   canvas.addEventListener("drawing-changed", () => {
     redraw();
   });
+
+  canvas.addEventListener("cursor-changed", () => {
+    redraw();
+  });
+
+  canvas.addEventListener("mousemove", (e) => {
+    cursorCommand = new CursorCommand(e.offsetX, e.offsetY);
+    canvas.dispatchEvent(cursorChanged);
+  });
+
+  canvas.addEventListener("mouseenter", (e) => {
+    cursorCommand = new CursorCommand(e.offsetX, e.offsetY);
+    canvas.dispatchEvent(cursorChanged);
+  });
+
+  canvas.addEventListener("mouseout", () => {
+    cursorCommand = null;
+    canvas.dispatchEvent(cursorChanged);
+  });
 }
 
 function thicknessSlider() {
@@ -108,13 +131,20 @@ function thicknessSlider() {
 
 function changeLineThickness(thickness: number) {
   ctx.lineWidth = thickness;
+  redraw();
 }
 
 function redraw() {
   clearCanvas();
-  for (const line of lines) {
-    line.display(ctx);
+  const lineThicknessBefore = ctx.lineWidth;
+  if (cursorCommand) {
+    cursorCommand.display(ctx);
   }
+
+  lines.forEach((line) => {
+    line.display(ctx);
+  });
+  ctx.lineWidth = lineThicknessBefore;
 }
 
 function eraseCanvas() {
