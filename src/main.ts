@@ -38,6 +38,9 @@ app.append(document.createElement("br"));
 addCanvasButton(eraseCanvas, "clear");
 addCanvasButton(undoCanvas, "undo");
 addCanvasButton(redoCanvas, "redo");
+// Thickness Slider
+app.append(document.createElement("br"));
+const lineThicknessSlider = thicknessSlider();
 
 addCanvasEvents();
 
@@ -57,7 +60,7 @@ function addCanvasEvents() {
     cursor.active = true;
     cursor.x = e.offsetX;
     cursor.y = e.offsetY;
-    currentLine = new Line();
+    currentLine = new Line(lineThicknessSlider.value);
     lines.push(currentLine);
 
     currentLine.drag(cursor.x, cursor.y);
@@ -84,6 +87,27 @@ function addCanvasEvents() {
   canvas.addEventListener("drawing-changed", () => {
     redraw();
   });
+}
+
+function thicknessSlider() {
+  const lineThickness = document.createElement("input");
+  lineThickness.type = "range";
+  lineThickness.min = "1";
+  lineThickness.max = "5";
+  lineThickness.value = lineThickness.min;
+
+  lineThickness.addEventListener("input", () => {
+    changeLineThickness(parseInt(lineThickness.value));
+  });
+  const sliderValue = document.createElement("label");
+  sliderValue.textContent = "Thickness: ";
+  app.append(sliderValue);
+  app.append(lineThickness);
+  return lineThickness;
+}
+
+function changeLineThickness(thickness: number) {
+  ctx.lineWidth = thickness;
 }
 
 function redraw() {
