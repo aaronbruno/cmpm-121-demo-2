@@ -1,6 +1,8 @@
 // Citation: https://shoddy-paint.glitch.me/paint1.html
 import "./style.css";
 
+import { Line } from "./classes.ts";
+
 const app: HTMLDivElement = document.querySelector("#app")!;
 
 // Title stuff
@@ -24,9 +26,9 @@ ctx.fillRect(0, 0, 256, 256);
 
 const drawingChanged = new CustomEvent("drawing-changed");
 
-let lines: { x: number; y: number }[][] = [];
-let redoLines: { x: number; y: number }[][] = [];
-let currentLine: { x: number; y: number }[] | null = [];
+let lines: Line[] = [];
+let redoLines: Line[] = [];
+let currentLine: Line | null = new Line();
 type ClickHandler = () => void;
 
 const cursor = { active: false, x: 0, y: 0 };
@@ -55,10 +57,10 @@ function addCanvasEvents() {
     cursor.active = true;
     cursor.x = e.offsetX;
     cursor.y = e.offsetY;
-    currentLine = [];
+    currentLine = new Line();
     lines.push(currentLine);
 
-    currentLine.push({ x: cursor.x, y: cursor.y });
+    currentLine.drag(cursor.x, cursor.y);
 
     canvas.dispatchEvent(drawingChanged);
   });
@@ -67,7 +69,7 @@ function addCanvasEvents() {
     if (cursor.active) {
       cursor.x = e.offsetX;
       cursor.y = e.offsetY;
-      currentLine!.push({ x: cursor.x, y: cursor.y });
+      currentLine!.drag(cursor.x, cursor.y);
       redoLines = [];
 
       canvas.dispatchEvent(drawingChanged);
@@ -87,15 +89,7 @@ function addCanvasEvents() {
 function redraw() {
   clearCanvas();
   for (const line of lines) {
-    if (line.length > 1) {
-      ctx.beginPath();
-      const { x, y } = line[0];
-      ctx.moveTo(x, y);
-      for (const { x, y } of line) {
-        ctx.lineTo(x, y);
-      }
-      ctx.stroke();
-    }
+    line.display(ctx);
   }
 }
 
