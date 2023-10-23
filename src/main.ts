@@ -3,6 +3,7 @@ import "./style.css";
 
 import { Line } from "./classes.ts";
 import { CursorCommand } from "./classes.ts";
+import { Sticker } from "./classes.ts";
 
 const app: HTMLDivElement = document.querySelector("#app")!;
 
@@ -26,9 +27,10 @@ const ctx = canvas.getContext("2d")!;
 ctx.fillStyle = "white";
 ctx.fillRect(0, 0, 256, 256);
 
-let lines: Line[] = [];
-let redoLines: Line[] = [];
-let currentLine: Line | null = new Line();
+let lines: (Line | Sticker)[] = [];
+let redoLines: (Line | Sticker)[] = [];
+let currentLine: (Line | Sticker) | null = null;
+let currentCursor = "*";
 type ClickHandler = () => void;
 
 const cursor = { active: false, x: 0, y: 0 };
@@ -46,6 +48,13 @@ addCanvasButton(redoCanvas, "redo");
 app.append(document.createElement("br"));
 const lineThicknessSlider = thicknessSlider();
 
+//Add Emoji Buttons
+const emojis = ["🐶", "🍗", "😲", "reset cursor"];
+app.append(document.createElement("br"));
+emojis.forEach((text) => {
+  addEmojiButton(text);
+});
+
 addCanvasEvents();
 
 // ---------- FUNCTIONS ----------
@@ -59,14 +68,38 @@ function addCanvasButton(func: ClickHandler, buttonName: string) {
   });
 }
 
+function addEmojiButton(text: string) {
+  const button = document.createElement("button");
+  button.innerHTML = text;
+  app.append(button);
+
+  button.addEventListener("click", () => {
+    currentCursor = text;
+    if (text == "reset cursor") {
+      currentCursor = "*";
+    }
+    canvas.dispatchEvent(cursorChanged);
+  });
+}
+
 function addCanvasEvents() {
   canvas.addEventListener("mousedown", (e) => {
     cursor.active = true;
     cursor.x = e.offsetX;
     cursor.y = e.offsetY;
-    currentLine = new Line(lineThicknessSlider.value);
-    lines.push(currentLine);
 
+    if (currentCursor == "*") {
+      currentLine = new Line(lineThicknessSlider.value);
+    } else {
+      currentLine = new Sticker(
+        cursor.x,
+        cursor.y,
+        currentCursor,
+        lineThicknessSlider.value
+      );
+    }
+
+    lines.push(currentLine);
     currentLine.drag(cursor.x, cursor.y);
 
     canvas.dispatchEvent(drawingChanged);
@@ -83,11 +116,6 @@ function addCanvasEvents() {
     }
   });
 
-  canvas.addEventListener("mouseup", () => {
-    cursor.active = false;
-    currentLine = null;
-  });
-
   canvas.addEventListener("drawing-changed", () => {
     redraw();
   });
@@ -96,13 +124,18 @@ function addCanvasEvents() {
     redraw();
   });
 
+  canvas.addEventListener("mouseup", () => {
+    cursor.active = false;
+    currentLine = null;
+  });
+
   canvas.addEventListener("mousemove", (e) => {
-    cursorCommand = new CursorCommand(e.offsetX, e.offsetY);
+    cursorCommand = new CursorCommand(e.offsetX, e.offsetY, currentCursor);
     canvas.dispatchEvent(cursorChanged);
   });
 
   canvas.addEventListener("mouseenter", (e) => {
-    cursorCommand = new CursorCommand(e.offsetX, e.offsetY);
+    cursorCommand = new CursorCommand(e.offsetX, e.offsetY, currentCursor);
     canvas.dispatchEvent(cursorChanged);
   });
 
@@ -137,14 +170,14 @@ function changeLineThickness(thickness: number) {
 function redraw() {
   clearCanvas();
   const lineThicknessBefore = ctx.lineWidth;
-  if (cursorCommand) {
-    cursorCommand.display(ctx);
-  }
 
   lines.forEach((line) => {
     line.display(ctx);
   });
   ctx.lineWidth = lineThicknessBefore;
+  if (cursorCommand) {
+    cursorCommand.display(ctx);
+  }
 }
 
 function eraseCanvas() {
