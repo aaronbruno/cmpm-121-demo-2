@@ -98,8 +98,12 @@ export class Sticker {
 
   display(ctx: CanvasRenderingContext2D) {
     const fontPrevious: string = ctx.font;
+    const fillStylePrevious: string | CanvasGradient | CanvasPattern =
+      ctx.fillStyle;
 
     ctx.font = this.size + "px monospace";
+    ctx.fillStyle = "black";
+
     ctx.fillText(
       this.text,
       this.coord.x - this.xOffset,
@@ -107,5 +111,6 @@ export class Sticker {
     );
 
     ctx.font = fontPrevious;
+    ctx.fillStyle = fillStylePrevious;
   }
 }
