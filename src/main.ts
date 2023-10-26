@@ -54,6 +54,7 @@ app.append(document.createElement("br"));
 emojis.forEach((text) => {
   addEmojiButton(text);
 });
+addCanvasButton(customEmoji, "Custom emoji");
 
 addCanvasEvents();
 
@@ -80,6 +81,14 @@ function addEmojiButton(text: string) {
     }
     canvas.dispatchEvent(cursorChanged);
   });
+}
+
+function customEmoji() {
+  const customEmoji = prompt(`Enter your emoji:`);
+  if (customEmoji) {
+    addEmojiButton(customEmoji);
+  }
+  return;
 }
 
 function addCanvasEvents() {
