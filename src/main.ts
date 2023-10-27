@@ -48,6 +48,11 @@ addCanvasButton(redoCanvas, "redo");
 app.append(document.createElement("br"));
 const lineThicknessSlider = thicknessSlider();
 
+// Add emoji rotation slider
+let rotationAngle: number = 0;
+app.append(document.createElement("br"));
+createRotationSlider();
+
 //Add Emoji Buttons
 const emojis = ["🐶", "🍗", "😲", "reset cursor"];
 app.append(document.createElement("br"));
@@ -105,7 +110,8 @@ function addCanvasEvents() {
         cursor.x,
         cursor.y,
         currentCursor,
-        lineThicknessSlider.value
+        lineThicknessSlider.value,
+        rotationAngle
       );
     }
 
@@ -174,6 +180,30 @@ function thicknessSlider() {
 
 function changeLineThickness(thickness: number) {
   ctx.lineWidth = thickness;
+  redraw();
+}
+
+function createRotationSlider() {
+  const rotationSlider = document.createElement("input");
+  rotationSlider.type = "range";
+  rotationSlider.min = "0";
+  rotationSlider.max = "360";
+  rotationSlider.value = `{rotationAngle}`;
+
+  rotationSlider.addEventListener("input", () => {
+    updateRotationAngle(parseInt(rotationSlider.value));
+  });
+
+  const sliderValueLabel = document.createElement("label");
+  sliderValueLabel.textContent = "Rotation Angle: ";
+  app.append(sliderValueLabel);
+  app.append(rotationSlider);
+
+  return rotationSlider;
+}
+
+function updateRotationAngle(angle: number) {
+  rotationAngle = angle;
   redraw();
 }
 

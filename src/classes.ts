@@ -47,9 +47,7 @@ export class CursorCommand {
     this.cursorSymbol = text;
   }
 
-  // Citation: Credit to Wyatt for help on the offset
   display(ctx: CanvasRenderingContext2D) {
-    //16-64 from 1-11
     const outMin = 16;
     const outMax = 64;
     const inMin = 1;
@@ -76,8 +74,15 @@ export class Sticker {
   size: number;
   xOffset: number;
   yOffset: number;
+  rotation: number;
 
-  constructor(x: number, y: number, text: string, size: string) {
+  constructor(
+    x: number,
+    y: number,
+    text: string,
+    size: string,
+    rotation: number
+  ) {
     this.coord = { x: x, y: y };
     this.text = text;
 
@@ -90,6 +95,8 @@ export class Sticker {
     this.xOffset = (4 * newSize) / outMin;
     this.yOffset = (8 * newSize) / outMin;
     this.size = newSize;
+
+    this.rotation = rotation;
   }
 
   drag(x: number, y: number) {
@@ -101,14 +108,16 @@ export class Sticker {
     const fillStylePrevious: string | CanvasGradient | CanvasPattern =
       ctx.fillStyle;
 
+    ctx.save();
+
+    ctx.translate(this.coord.x, this.coord.y);
+    ctx.rotate((this.rotation * Math.PI) / 180);
     ctx.font = this.size + "px monospace";
     ctx.fillStyle = "black";
 
-    ctx.fillText(
-      this.text,
-      this.coord.x - this.xOffset,
-      this.coord.y + this.yOffset
-    );
+    ctx.fillText(this.text, -this.xOffset, this.yOffset);
+
+    ctx.restore();
 
     ctx.font = fontPrevious;
     ctx.fillStyle = fillStylePrevious;
