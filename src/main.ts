@@ -55,6 +55,7 @@ emojis.forEach((text) => {
   addEmojiButton(text);
 });
 addCanvasButton(customEmoji, "Custom emoji");
+addCanvasButton(exportPicture, "Export picture");
 
 addCanvasEvents();
 
@@ -215,4 +216,25 @@ function redoCanvas() {
     canvas.dispatchEvent(drawingChanged);
   }
   return;
+}
+
+function exportPicture() {
+  const exportCanvas = document.createElement("canvas");
+  exportCanvas.width = canvas.width * 4;
+  exportCanvas.height = canvas.height * 4;
+
+  const exportCtx = exportCanvas.getContext("2d")!;
+  exportCtx.fillStyle = "white";
+
+  exportCtx.scale(4, 4);
+  exportCtx.fillRect(0, 0, 256, 256);
+
+  lines.forEach((line) => {
+    line.display(exportCtx);
+  });
+
+  const anchor = document.createElement("a");
+  anchor.href = exportCanvas.toDataURL("image/png");
+  anchor.download = "YourSketchpad.png";
+  anchor.click();
 }
